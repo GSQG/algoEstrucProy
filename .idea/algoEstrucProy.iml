@@ -7,8 +7,10 @@
       <sourceFolder url="file://$MODULE_DIR$/Estructura" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Logica" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Modelo" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DataAccesObject" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="fizzed.blaze.mysql" level="project" />
   </component>
 </module>
