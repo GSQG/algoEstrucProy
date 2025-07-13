@@ -1,16 +1,23 @@
 public class UtilRecursivo {
-    public static String listarRecursivo(Object nodoObj) {
+    public static String listarRecursivo(Object nodo) {
         StringBuilder sb = new StringBuilder();
-        listar(sb, nodoObj);
+        listar(sb, nodo);
         return sb.toString();
     }
 
-    private static void listar(StringBuilder sb, Object nodoObj) {
+    private static void listar(StringBuilder sb, Object nodo) {
+        if (nodo == null) return;
         try {
-            if (nodoObj == null) return;
-            Class<?> clazz = nodoObj.getClass();
-            Object dato = clazz.getField("dato").get(nodoObj);
-            Object siguiente = clazz.getField("siguiente").get(nodoObj);
+            Class<?> clazz = nodo.getClass();
+
+            var campoDato = clazz.getDeclaredField("dato");
+            var campoSig = clazz.getDeclaredField("siguiente");
+            campoDato.setAccessible(true);
+            campoSig.setAccessible(true);
+
+            Object dato = campoDato.get(nodo);
+            Object siguiente = campoSig.get(nodo);
+
             if (dato instanceof Suscriptor s) {
                 sb.append("ID: ").append(s.getId())
                         .append(", Nombre: ").append(s.getNombre())
@@ -18,9 +25,10 @@ public class UtilRecursivo {
                         .append(", Plan: ").append(s.getPlan())
                         .append("\n");
             }
+
             listar(sb, siguiente);
         } catch (Exception e) {
-            sb.append("Error al recorrer: ").append(e.getMessage());
+            sb.append("Error: ").append(e.getMessage());
         }
     }
 }
