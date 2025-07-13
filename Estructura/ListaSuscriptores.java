@@ -49,13 +49,18 @@ public class ListaSuscriptores {
         StringBuilder sb = new StringBuilder();
         Nodo actual = cabeza;
         while (actual != null) {
-            var s = actual.dato;
+            Suscriptor s = actual.dato;
             sb.append("ID: ").append(s.getId())
                     .append(", Nombre: ").append(s.getNombre())
                     .append(", Correo: ").append(s.getCorreo())
-                    .append(", Plan: ").append(s.getPlan()).append("\n");
+                    .append(", Plan: ").append(s.getPlan())
+                    .append("\n");
             actual = actual.siguiente;
         }
         return sb.length() == 0 ? "No hay suscriptores." : sb.toString();
+    }
+
+    public Nodo getCabeza() {
+        return cabeza;
     }
 }

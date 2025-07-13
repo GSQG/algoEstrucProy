@@ -1,0 +1,157 @@
+@startuml
+
+class App {
+  + main(args: String[]): void
+}
+
+class Interfaz {
+  - servicio: SuscripcionServicio
+  + Interfaz()
+  + mostrarMenu(): void
+  + registrar(): void
+  + eliminar(): void
+  + buscar(): void
+  + listar(): void
+  + ordenar(): void
+  + busquedaBinaria(): void
+  + listarRecursivo(): void
+  + deshacer(): void
+  + procesarNotificaciones(): void
+}
+
+class SuscripcionServicio {
+  - lista: ListaSuscriptores
+  - pilaOps: PilaOperaciones
+  - colaNotif: ColaNotificaciones
+  - arbol: ArbolSuscriptores
+  - grafo: GrafoUsuarios
+  + SuscripcionServicio()
+  + registrarSuscriptor(nombre: String, correo: String, planTexto: String): boolean
+  + eliminarSuscriptor(correo: String): boolean
+  + buscarSuscriptor(correo: String): Suscriptor
+  + listarSuscriptores(): String
+  + obtenerTodos(): List<Suscriptor>
+  + listarRecursivo(): String
+  + buscarBinaria(correo: String): Suscriptor
+  + deshacer(): boolean
+  + procesarNotificaciones(): String
+}
+
+class ListaSuscriptores {
+  - cabeza: Nodo
+  - contador: int
+  + ListaSuscriptores()
+  + agregar(nombre: String, correo: String, plan: PlanSuscripcion): boolean
+  + eliminar(correo: String): boolean
+  + buscarPorCorreo(correo: String): Suscriptor
+  + listar(): String
+  + getCabeza(): Nodo
+}
+
+class Nodo {
+  + dato: Suscriptor
+  + siguiente: Nodo
+  + Nodo(dato: Suscriptor)
+}
+
+class OrdenadorSuscriptores {
+  + mergeSort(lista: List<Suscriptor>): void
+}
+
+class BusquedaBinaria {
+  + buscarPorCorreo(lista: List<Suscriptor>, correo: String): Suscriptor
+}
+
+class PilaOperaciones {
+  - pila: Stack<Registro>
+  + push(operacion: Operacion, correo: String): void
+  + pop(): Registro
+}
+
+class Registro {
+  + operacion: Operacion
+  + correo: String
+  + Registro(operacion: Operacion, correo: String)
+}
+
+enum Operacion {
+  REGISTRAR
+  ELIMINAR
+}
+
+class ColaNotificaciones {
+  - cola: Queue<Notificacion>
+  + encolar(correo: String, mensaje: String): void
+  + desencolar(): Notificacion
+  + estaVacia(): boolean
+}
+
+class Notificacion {
+  + correo: String
+  + mensaje: String
+  + Notificacion(correo: String, mensaje: String)
+}
+
+class UtilRecursivo {
+  + listarRecursivo(nodo: Nodo): String
+}
+
+class ArbolSuscriptores {
+  - raiz: NodoA
+  + insertar(s: Suscriptor): void
+  + buscar(correo: String): Suscriptor
+}
+
+class NodoA {
+  + dato: Suscriptor
+  + izq: NodoA
+  + der: NodoA
+  + NodoA(dato: Suscriptor)
+}
+
+class GrafoUsuarios {
+  - adj: Map<Suscriptor, List<Suscriptor>>
+  + addUsuario(s: Suscriptor): void
+  + addRelacion(a: Suscriptor, b: Suscriptor): void
+  + dfs(start: Suscriptor): List<Suscriptor>
+  + bfs(start: Suscriptor): List<Suscriptor>
+}
+
+class Suscriptor {
+  - id: String
+  - nombre: String
+  - correo: String
+  - plan: PlanSuscripcion
+  + Suscriptor(id: String, nombre: String, correo: String, plan: PlanSuscripcion)
+  + getId(): String
+  + getNombre(): String
+  + getCorreo(): String
+  + getPlan(): PlanSuscripcion
+}
+
+enum PlanSuscripcion {
+  BASICO
+  PREMIUM
+  PRO
+}
+
+App --> Interfaz
+Interfaz --> SuscripcionServicio
+SuscripcionServicio *-- ListaSuscriptores
+SuscripcionServicio *-- PilaOperaciones
+SuscripcionServicio *-- ColaNotificaciones
+SuscripcionServicio *-- ArbolSuscriptores
+SuscripcionServicio *-- GrafoUsuarios
+ListaSuscriptores *-- Nodo
+Nodo --> Suscriptor
+SuscripcionServicio --> Suscriptor
+SuscripcionServicio --> PlanSuscripcion
+PilaOperaciones *-- Registro
+PilaOperaciones ..> Operacion
+ColaNotificaciones *-- Notificacion
+ArbolSuscriptores *-- NodoA
+Registro ..> Operacion
+Registro ..> Suscriptor
+Notificacion ..> Suscriptor
+
+@enduml
