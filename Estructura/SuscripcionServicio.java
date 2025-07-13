@@ -1,73 +1,142 @@
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.ArrayList;
 
 public class SuscripcionServicio {
-    private final ListaSuscriptores lista;
-    private final PilaOperaciones pilaOps = new PilaOperaciones();
-    private final ColaNotificaciones colaNotif = new ColaNotificaciones();
-    private final ArbolSuscriptores arbol = new ArbolSuscriptores();
-    private final GrafoUsuarios grafo = new GrafoUsuarios();
+    private ConexionMySQL conexionMySQL;
+    private Connection conexion;
+    private Nodo cabeza;
+    private int contador;
+    private PilaOperaciones pilaOps;
+    private ColaNotificaciones colaNotif;
+    private ArbolSuscriptores arbol;
+    private GrafoUsuarios grafo;
 
     public SuscripcionServicio() {
-        lista = new ListaSuscriptores();
+        conexionMySQL = new ConexionMySQL();
+        conexion = conexionMySQL.getConexion();
+        pilaOps = new PilaOperaciones();
+        colaNotif = new ColaNotificaciones();
+        arbol = new ArbolSuscriptores();
+        grafo = new GrafoUsuarios();
+        cabeza = null;
+        contador = 1;
+        try (PreparedStatement pst = conexion.prepareStatement("SELECT id, nombre, correo, plan FROM suscriptores");
+             ResultSet rs = pst.executeQuery()) {
+            while (rs.next()) {
+                Suscriptor s = new Suscriptor(
+                        rs.getString("id"),
+                        rs.getString("nombre"),
+                        rs.getString("correo"),
+                        PlanSuscripcion.desdeTexto(rs.getString("plan"))
+                );
+                Nodo nuevo = new Nodo(s);
+                nuevo.siguiente = cabeza;
+                cabeza = nuevo;
+                arbol.insertar(s);
+                grafo.addUsuario(s);
+                contador++;
+            }
+        } catch (SQLException e) {}
     }
 
     public boolean registrarSuscriptor(String nombre, String correo, String planTexto) {
+        String id = String.format("S%03d", contador++);
         PlanSuscripcion plan = PlanSuscripcion.desdeTexto(planTexto);
-        boolean exito = lista.agregar(nombre, correo, plan);
-        if (exito) {
-            pilaOps.push(PilaOperaciones.Operacion.REGISTRAR, correo);
-            colaNotif.encolar(correo, "Registrado");
-            Suscriptor s = lista.buscarPorCorreo(correo);
-            arbol.insertar(s);
-            grafo.addUsuario(s);
-        }
-        return exito;
+        try (PreparedStatement pst = conexion.prepareStatement("INSERT INTO suscriptores (id, nombre, correo, plan) VALUES (?, ?, ?, ?)")) {
+            pst.setString(1, id);
+            pst.setString(2, nombre);
+            pst.setString(3, correo);
+            pst.setString(4, plan.toString());
+            if (pst.executeUpdate() > 0) {
+                Suscriptor s = new Suscriptor(id, nombre, correo, plan);
+                Nodo nuevo = new Nodo(s);
+                nuevo.siguiente = cabeza;
+                cabeza = nuevo;
+                pilaOps.push(PilaOperaciones.Operacion.REGISTRAR, correo);
+                colaNotif.encolar(correo, "Registrado");
+                arbol.insertar(s);
+                grafo.addUsuario(s);
+                return true;
+            }
+        } catch (SQLException e) {}
+        return false;
     }
 
     public boolean eliminarSuscriptor(String correo) {
-        boolean exito = lista.eliminar(correo);
-        if (exito) {
-            pilaOps.push(PilaOperaciones.Operacion.ELIMINAR, correo);
-            colaNotif.encolar(correo, "Eliminado");
+        Nodo curr = cabeza;
+        Nodo prev = null;
+        while (curr != null && !curr.dato.getCorreo().equalsIgnoreCase(correo)) {
+            prev = curr;
+            curr = curr.siguiente;
         }
-        return exito;
+        if (curr == null) return false;
+        String id = curr.dato.getId();
+        try (PreparedStatement pst = conexion.prepareStatement("DELETE FROM suscriptores WHERE id = ?")) {
+            pst.setString(1, id);
+            if (pst.executeUpdate() > 0) {
+                if (prev == null) cabeza = curr.siguiente;
+                else prev.siguiente = curr.siguiente;
+                pilaOps.push(PilaOperaciones.Operacion.ELIMINAR, correo);
+                colaNotif.encolar(correo, "Eliminado");
+                return true;
+            }
+        } catch (SQLException e) {}
+        return false;
     }
 
     public Suscriptor buscarSuscriptor(String correo) {
-        return lista.buscarPorCorreo(correo);
+        Nodo curr = cabeza;
+        while (curr != null) {
+            if (curr.dato.getCorreo().equalsIgnoreCase(correo)) return curr.dato;
+            curr = curr.siguiente;
+        }
+        return null;
     }
 
     public String listarSuscriptores() {
-        return lista.listar();
+        StringBuilder sb = new StringBuilder();
+        Nodo curr = cabeza;
+        while (curr != null) {
+            Suscriptor s = curr.dato;
+            sb.append("ID: ").append(s.getId())
+                    .append(", Nombre: ").append(s.getNombre())
+                    .append(", Correo: ").append(s.getCorreo())
+                    .append(", Plan: ").append(s.getPlan())
+                    .append("\n");
+            curr = curr.siguiente;
+        }
+        return sb.toString();
     }
 
     public List<Suscriptor> obtenerTodos() {
-        List<Suscriptor> salida = new ArrayList<>();
-        Nodo actual = lista.getCabeza();
-        while (actual != null) {
-            salida.add(actual.dato);
-            actual = actual.siguiente;
+        List<Suscriptor> lista = new ArrayList<>();
+        Nodo curr = cabeza;
+        while (curr != null) {
+            lista.add(curr.dato);
+            curr = curr.siguiente;
         }
-        return salida;
+        return lista;
     }
 
     public String listarRecursivo() {
-        return UtilRecursivo.listarRecursivo(lista.getCabeza());
+        return UtilRecursivo.listarRecursivo(cabeza);
     }
 
     public Suscriptor buscarBinaria(String correo) {
-        List<Suscriptor> copia = obtenerTodos();
-        OrdenadorSuscriptores.mergeSort(copia);
-        return BusquedaBinaria.buscarPorCorreo(copia, correo);
+        List<Suscriptor> lista = obtenerTodos();
+        OrdenadorSuscriptores.mergeSort(lista);
+        return BusquedaBinaria.buscarPorCorreo(lista, correo);
     }
 
     public boolean deshacer() {
         PilaOperaciones.Registro reg = pilaOps.pop();
         if (reg == null) return false;
         if (reg.operacion == PilaOperaciones.Operacion.REGISTRAR) {
-            lista.eliminar(reg.correo);
-            return true;
+            return eliminarSuscriptor(reg.correo);
         }
         return false;
     }
@@ -79,5 +148,23 @@ public class SuscripcionServicio {
             sb.append(n.correo).append(": ").append(n.mensaje).append("\n");
         }
         return sb.toString();
+    }
+
+    public Suscriptor buscarEnArbol(String correo) {
+        return arbol.buscar(correo);
+    }
+
+    public List<Suscriptor> dfs(Suscriptor inicio) {
+        return grafo.dfs(inicio);
+    }
+
+    public List<Suscriptor> bfs(Suscriptor inicio) {
+        return grafo.bfs(inicio);
+    }
+
+    private static class Nodo {
+        Suscriptor dato;
+        Nodo siguiente;
+        Nodo(Suscriptor dato) { this.dato = dato; }
     }
 }
