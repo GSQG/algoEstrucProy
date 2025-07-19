@@ -145,9 +145,10 @@ public class SuscripcionServicio {
 
     public Suscriptor buscarBinaria(String correo) {
         List<Suscriptor> lista = obtenerTodos();
-        OrdenadorSuscriptores.mergeSort(lista);
+        OrdenadorSuscriptores.mergeSortPorCorreo(lista);
         return BusquedaBinaria.buscarPorCorreo(lista, correo);
     }
+
 
     public boolean deshacer() {
         PilaOperaciones.Registro reg = pilaOps.pop();

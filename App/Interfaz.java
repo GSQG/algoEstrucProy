@@ -42,7 +42,16 @@ public class Interfaz {
     public void registrar() {
         String nombre = JOptionPane.showInputDialog("Nombre:");
         String correo = JOptionPane.showInputDialog("Correo:");
-        String plan = JOptionPane.showInputDialog("Plan (Básico, Premium, Pro):");
+        String[] planes = {"Básico", "Premium", "Pro"};
+        String plan = (String) JOptionPane.showInputDialog(
+                null,
+                "Selecciona un plan:",
+                "Planes disponibles",
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                planes,
+                planes[0]
+        );
         boolean ok = servicio.registrarSuscriptor(nombre, correo, plan);
         JOptionPane.showMessageDialog(null, ok ? "Registrado" : "Error al registrar");
     }
