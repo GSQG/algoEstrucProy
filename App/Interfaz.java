@@ -12,7 +12,8 @@ public class Interfaz {
         String[] opciones = {
                 "Registrar", "Eliminar", "Buscar", "Listar",
                 "Ordenar", "Búsqueda Binaria", "Listar Recursivo",
-                "Deshacer", "Notificaciones", "Salir"
+                "Deshacer", "Notificaciones", "Buscar en Árbol",
+                "DFS por Plan", "BFS por Plan", "Salir"
         };
         while (true) {
             int sel = JOptionPane.showOptionDialog(
@@ -20,7 +21,7 @@ public class Interfaz {
                     JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE,
                     null, opciones, opciones[0]
             );
-            if (sel == -1 || sel == 9) break;
+            if (sel == -1 || sel == 12) break;
             switch (sel) {
                 case 0: registrar(); break;
                 case 1: eliminar(); break;
@@ -31,6 +32,9 @@ public class Interfaz {
                 case 6: listarRecursivo(); break;
                 case 7: deshacer(); break;
                 case 8: procesarNotificaciones(); break;
+                case 9: buscarEnArbol(); break;
+                case 10: dfsPorPlan(); break;
+                case 11: bfsPorPlan(); break;
             }
         }
     }
@@ -100,6 +104,46 @@ public class Interfaz {
     public void procesarNotificaciones() {
         String log = servicio.procesarNotificaciones();
         JOptionPane.showMessageDialog(null, log);
+    }
+
+    public void buscarEnArbol() {
+        String correo = JOptionPane.showInputDialog("Correo a buscar en árbol:");
+        Suscriptor s = servicio.buscarEnArbol(correo);
+        String msg = s != null
+                ? String.format("ID: %s\nNombre: %s\nCorreo: %s\nPlan: %s",
+                s.getId(), s.getNombre(), s.getCorreo(), s.getPlan())
+                : "No encontrado";
+        JOptionPane.showMessageDialog(null, msg);
+    }
+
+    public void dfsPorPlan() {
+        String correo = JOptionPane.showInputDialog("Correo de inicio para DFS:");
+        Suscriptor inicio = servicio.buscarSuscriptor(correo);
+        if (inicio == null) {
+            JOptionPane.showMessageDialog(null, "No encontrado");
+            return;
+        }
+        List<Suscriptor> dfs = servicio.dfs(inicio);
+        StringBuilder sb = new StringBuilder("DFS desde " + correo + ":\n");
+        for (Suscriptor s : dfs) {
+            sb.append(s.getCorreo()).append(" (Plan: ").append(s.getPlan()).append(")\n");
+        }
+        JOptionPane.showMessageDialog(null, sb.toString());
+    }
+
+    public void bfsPorPlan() {
+        String correo = JOptionPane.showInputDialog("Correo de inicio para BFS:");
+        Suscriptor inicio = servicio.buscarSuscriptor(correo);
+        if (inicio == null) {
+            JOptionPane.showMessageDialog(null, "No encontrado");
+            return;
+        }
+        List<Suscriptor> bfs = servicio.bfs(inicio);
+        StringBuilder sb = new StringBuilder("BFS desde " + correo + ":\n");
+        for (Suscriptor s : bfs) {
+            sb.append(s.getCorreo()).append(" (Plan: ").append(s.getPlan()).append(")\n");
+        }
+        JOptionPane.showMessageDialog(null, sb.toString());
     }
 
     public static void main(String[] args) {
