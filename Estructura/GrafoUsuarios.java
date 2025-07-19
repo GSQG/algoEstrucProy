@@ -8,8 +8,10 @@ public class GrafoUsuarios {
     }
 
     public void addRelacion(Suscriptor a, Suscriptor b) {
-        adj.get(a).add(b);
-        adj.get(b).add(a);
+        if (!adj.containsKey(a)) addUsuario(a);
+        if (!adj.containsKey(b)) addUsuario(b);
+        if (!adj.get(a).contains(b)) adj.get(a).add(b);
+        if (!adj.get(b).contains(a)) adj.get(b).add(a);
     }
 
     public List<Suscriptor> dfs(Suscriptor start) {
@@ -45,5 +47,9 @@ public class GrafoUsuarios {
             }
         }
         return out;
+    }
+
+    public int obtenerCantidadUsuarios() {
+        return adj.size();
     }
 }

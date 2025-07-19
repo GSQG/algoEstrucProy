@@ -38,9 +38,21 @@ public class SuscripcionServicio {
                 cabeza = nuevo;
                 arbol.insertar(s);
                 grafo.addUsuario(s);
-                contador++;
             }
+            conectarUsuariosPorPlan();
+            contador = grafo.obtenerCantidadUsuarios() + 1;
         } catch (SQLException e) {}
+    }
+
+    private void conectarUsuariosPorPlan() {
+        List<Suscriptor> lista = obtenerTodos();
+        for (int i = 0; i < lista.size(); i++) {
+            for (int j = i + 1; j < lista.size(); j++) {
+                if (lista.get(i).getPlan().equals(lista.get(j).getPlan())) {
+                    grafo.addRelacion(lista.get(i), lista.get(j));
+                }
+            }
+        }
     }
 
     public boolean registrarSuscriptor(String nombre, String correo, String planTexto) {
@@ -60,6 +72,11 @@ public class SuscripcionServicio {
                 colaNotif.encolar(correo, "Registrado");
                 arbol.insertar(s);
                 grafo.addUsuario(s);
+                for (Suscriptor otro : obtenerTodos()) {
+                    if (!otro.getCorreo().equalsIgnoreCase(s.getCorreo()) && otro.getPlan().equals(s.getPlan())) {
+                        grafo.addRelacion(s, otro);
+                    }
+                }
                 return true;
             }
         } catch (SQLException e) {}
